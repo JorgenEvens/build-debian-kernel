@@ -1,0 +1,44 @@
+#!/bin/bash
+
+KERNEL=$1
+
+if [ -z "$KERNEL" ]; then
+    2> echo "Please supply kernel to build"
+    exit 1
+fi
+
+URL="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/snapshot/${KERNEL}.tar.gz"
+mkdir -p /data || true
+cd /data
+
+extract_kernel() {
+    if [ ! -f "/data/${KERNEL}.tar.gz" ]; then
+        curl "$URL" > /data/${KERNEL}.tar.gz
+    fi
+
+    tar -C /data/ -xf "${KERNEL}.tar.gz"
+}
+
+ensure_kernel() {
+    if [ ! -d "/data/${KERNEL}" ]; then
+        extract_kernel
+    fi
+
+    ln -s "/data/${KERNEL}" "/usr/src/${KERNEL}"
+}
+
+ensure_kernel
+
+apt-get -y update
+apt -y install linux-image-amd64
+cd /data/${KERNEL}
+
+OLDCONF=`ls /boot/config-* | sort | tail -n1`
+
+cp "${OLDCONF}" .config
+
+# Disable kernel signing
+sed -ri '/CONFIG_SYSTEM_TRUSTED_KEYS/s/=.+/=""/g' .config
+
+make olddefconfig
+make -j`nproc` bindeb-pkg
