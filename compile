@@ -7,16 +7,37 @@ if [ -z "$KERNEL" ]; then
     exit 1
 fi
 
-URL="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/snapshot/${KERNEL}.tar.gz"
+extract_kernel_version() {
+    local EXTERNSION
+    local FILENAME
+
+    FILENAME="`basename $1`"
+    EXTENSION=`echo $FILENAME | grep -o -E '\.tar\.[a-z]+$'`
+
+    basename -s $EXTENSION $FILENAME
+}
+
+if [[ "$KERNEL" = "http"* ]]; then
+    URL="$KERNEL"
+    KERNEL=$(extract_kernel_version "${KERNEL}")
+else
+    MAJOR=`echo $KERNEL | grep -o -E '[0-9]+' | head -n1`
+    URL="https://cdn.kernel.org/pub/linux/kernel/v$MAJOR.x/$KERNEL.tar.gz"
+fi
 mkdir -p /data || true
 cd /data
 
 extract_kernel() {
-    if [ ! -f "/data/${KERNEL}.tar.gz" ]; then
-        curl "$URL" > /data/${KERNEL}.tar.gz
+    local FILENAME
+    FILENAME=$(basename "$URL")
+
+    if [ ! -f "/data/${FILENAME}" ]; then
+        echo "Downloading kernel from $URL"
+        echo "curl -L $URL > /data/$FILENAME"
+        curl -L "$URL" > /data/$FILENAME
     fi
 
-    tar -C /data/ -xf "${KERNEL}.tar.gz"
+    tar -C /data/ -xf "${FILENAME}"
 }
 
 ensure_kernel() {
@@ -36,6 +57,9 @@ cd /data/${KERNEL}
 OLDCONF=`ls /boot/config-* | sort | tail -n1`
 
 cp "${OLDCONF}" .config
+
+# Disable debug builds
+sed -i 's/CONFIG_DEBUG_INFO=y/CONFIG_DEBUG_INFO=n/' .config
 
 # Disable kernel signing
 sed -ri '/CONFIG_SYSTEM_TRUSTED_KEYS/s/=.+/=""/g' .config
