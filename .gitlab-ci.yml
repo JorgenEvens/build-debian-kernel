@@ -1,0 +1,34 @@
+image: debian:unstable
+
+stages:
+  - push-tags
+  - build-tag
+
+push-tags:
+  stage: push-tags
+  only:
+    - schedules
+  script:
+    - apt-get -y update
+    - apt-get -y install git curl
+    - >
+      export KERNEL_VERSION=`curl https://www.kernel.org/finger_banner | grep 'stable version' | cut -d ':' -f2 | awk '// { print $1 }'`;
+      echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}";
+      curl -X POST --silent --show-error --fail \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}" \
+        || true
+
+build-tag:
+  stage: build-tag
+  only:
+    - tags
+  artifacts:
+    paths:
+      - artifacts/*
+  script:
+    - apt-get -y update
+    - apt-get -y install build-essential flex bison libelf-dev libncurses5-dev curl bc rsync kmod cpio libssl-dev:native linux-image-amd64
+    - rm -rf /var/lib/apt/lists/*
+    - chmod +x ./compile
+    - ./compile linux-${CI_COMMIT_TAG} /data
+    - mkdir -p artifacts && cp /data/*.deb artifacts/

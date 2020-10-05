@@ -1,6 +1,7 @@
 #!/bin/bash
 
 KERNEL=$1
+OUTPUT=${2:-/data}
 
 if [ -z "$KERNEL" ]; then
     2> echo "Please supply kernel to build"
@@ -24,35 +25,35 @@ else
     MAJOR=`echo $KERNEL | grep -o -E '[0-9]+' | head -n1`
     URL="https://cdn.kernel.org/pub/linux/kernel/v$MAJOR.x/$KERNEL.tar.gz"
 fi
-mkdir -p /data || true
-cd /data
+mkdir -p $OUTPUT || true
+cd $OUTPUT
 
 extract_kernel() {
     local FILENAME
     FILENAME=$(basename "$URL")
 
-    if [ ! -f "/data/${FILENAME}" ]; then
+    if [ ! -f "${OUTPUT}/${FILENAME}" ]; then
         echo "Downloading kernel from $URL"
-        echo "curl -L $URL > /data/$FILENAME"
-        curl -L "$URL" > /data/$FILENAME
+        echo "curl -L $URL > ${OUTPUT}/$FILENAME"
+        curl -L "$URL" > ${OUTPUT}/$FILENAME
     fi
 
-    tar -C /data/ -xf "${FILENAME}"
+    tar -C "${OUTPUT}" -xf "${FILENAME}"
 }
 
 ensure_kernel() {
-    if [ ! -d "/data/${KERNEL}" ]; then
+    if [ ! -d "${OUTPUT}/${KERNEL}" ]; then
         extract_kernel
     fi
 
-    ln -s "/data/${KERNEL}" "/usr/src/${KERNEL}"
+    ln -s "${OUTPUT}/${KERNEL}" "/usr/src/${KERNEL}"
 }
 
 ensure_kernel
 
 apt-get -y update
 apt -y install linux-image-amd64
-cd /data/${KERNEL}
+cd ${OUTPUT}/${KERNEL}
 
 OLDCONF=`ls /boot/config-* | sort | tail -n1`
 
