@@ -1,0 +1,21 @@
+image: debian/unstable
+
+stages:
+  build_kernel
+
+latest:
+  stage: build_kernel
+  only:
+    - schedules
+  artifacts:
+    paths:
+      - "output/*.deb"
+  script:
+    - apt-get -y update
+    - apt-get -y install build-essential flex bison \
+            libelf-dev libncurses5-dev curl \
+            bc rsync kmod cpio libssl-dev:native \
+            linux-image-amd64
+    - rm -rf /var/lib/apt/lists/*
+    - chmod +x ./compile
+    - KERNEL=`curl https://www.kernel.org/finger_banner | grep 'stable version' | cut -d ':' -f2 | awk '// { print $1 }'` ./compile
