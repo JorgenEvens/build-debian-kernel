@@ -12,11 +12,13 @@ push-tags:
     - apt-get -y update
     - apt-get -y install git curl
     - >
-      export KERNEL_VERSION=`curl https://www.kernel.org/finger_banner | grep 'stable version' | cut -d ':' -f2 | awk '// { print $1 }'`;
-      echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}";
-      curl -X POST --silent --show-error --fail \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}" \
-        || true
+      KERNELS=`curl https://www.kernel.org/finger_banner | grep 'latest stable [0-9]' | cut -d ':' -f2 | awk '// { print $1 }'`;
+      for KERNEL_VERSION in $KERNELS; do
+        echo "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}";
+        curl -X POST --silent --show-error --fail \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/tags?tag_name=${KERNEL_VERSION}&ref=${CI_COMMIT_SHA}&private_token=${GITLAB_TOKEN}" \
+          || true
+      done
 
 build-tag:
   stage: build-tag
