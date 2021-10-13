@@ -69,5 +69,8 @@ sed -ri '/CONFIG_SYSTEM_TRUSTED_KEYS/s/=.+/=""/g' .config
 # https://elrepo.org/bugs/view.php?id=1123&nbn=2
 ./scripts/config --set-val CONFIG_I2C_HID_ACPI m
 
+# Enable vGPU module
+./scripts/config --set-val CONFIG_VFIO_MDEV_DEVICE m
+
 make olddefconfig
 make -j`nproc` bindeb-pkg
