@@ -2,7 +2,7 @@ FROM debian:unstable
 
 RUN apt-get -y update && \
         apt-get -y install build-essential flex bison \
-            libelf-dev libncurses5-dev curl \
+            libelf-dev libncurses5-dev curl python3 \
             bc rsync kmod cpio libssl-dev:native \
             linux-image-amd64 && \
         rm -rf /var/lib/apt/lists/*
