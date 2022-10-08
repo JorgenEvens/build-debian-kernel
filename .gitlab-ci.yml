@@ -29,7 +29,7 @@ build-tag:
       - artifacts/*
   script:
     - apt-get -y update
-    - apt-get -y install build-essential flex bison libelf-dev libncurses5-dev curl bc rsync kmod cpio libssl-dev:native linux-image-amd64 python3
+    - apt-get -y install build-essential flex bison libelf-dev libncurses5-dev curl bc rsync kmod cpio libssl-dev:native linux-image-amd64 python3 pahole
     - rm -rf /var/lib/apt/lists/*
     - chmod +x ./compile
     - ./compile linux-${CI_COMMIT_TAG} /data
