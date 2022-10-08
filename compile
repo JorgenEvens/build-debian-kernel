@@ -73,7 +73,7 @@ sed -ri '/CONFIG_SYSTEM_TRUSTED_KEYS/s/=.+/=""/g' .config
 ./scripts/config --set-val CONFIG_VFIO_MDEV_DEVICE m
 
 # Fix call to python3 
-if [ ! -x `which python3`]; then
+if [ ! -x `which python3` ]; then
     ln -s `which python` /usr/bin/python3
 fi
 
